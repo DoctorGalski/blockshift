@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="4種類のキャラを切り替えて遊ぶ、破壊できる横スクロールゲーム。">
+<title>BlockShift — ブラウザ版</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#172234;color:#f8efd8}*{box-sizing:border-box}body{margin:0;padding:18px;text-align:center}h1{font-size:24px;letter-spacing:.14em;margin:0 0 4px}p{font-size:13px;color:#bdcbd8;margin:8px 0}.stage{position:relative;margin:14px auto;width:min(1152px,100%,calc((100vh - 210px)*1.5));min-width:min(384px,100%);aspect-ratio:3/2;border:1px solid #607184;box-shadow:0 10px 40px #0005;background:#243248}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;outline:none}canvas:fullscreen{object-fit:contain;background:#172234}.cover{position:absolute;inset:0;display:grid;place-content:center;gap:10px;background:#172234ec;padding:18px}.cover[hidden]{display:none}button{font:inherit;background:#f0bc70;border:0;border-radius:6px;color:#263047;padding:10px 22px;cursor:pointer;font-weight:700}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid #82dcd2;outline-offset:4px}#fullscreen{font-size:12px;padding:7px 14px}details{max-width:850px;margin:12px auto;text-align:left;font-size:13px;line-height:1.9}summary{cursor:pointer;text-align:center}kbd{background:#33455f;padding:2px 5px;border-radius:3px}a{color:#91ddd0}footer{font-size:11px;color:#90a5b8;margin:12px}#status{max-width:500px;white-space:pre-wrap}progress{width:240px;max-width:100%;margin:auto;accent-color:#f0bc70}
+</style>
+
+</head>
+<body>
+<h1>BLOCKSHIFT</h1>
+<p>4人のキャラで、壊せるステージを遊ぼう。PC・キーボード／ゲームパッド対応</p>
+<div class="stage">
+<canvas id="canvas" width="1152" height="768" tabindex="0" aria-label="BlockShift ゲーム画面">WebGL 2.0に対応したブラウザをお使いください。</canvas>
+<div class="cover" id="cover">
+<strong id="heading">ゲームを読み込み中</strong>
+<p id="status" role="status">初回はエンジンのダウンロードに少し時間がかかります。</p>
+<progress id="progress"></progress>
+<button id="start" disabled>読み込み中…</button>
+</div>
+</div>
+<button id="fullscreen">全画面表示</button>
+<details open><summary>操作方法</summary>
+<div><kbd>← →</kbd> / <kbd>A D</kbd> 移動　<kbd>Space / Z</kbd> ジャンプ　<kbd>X / J</kbd> 攻撃　<kbd>Shift</kbd> ダッシュ<br>
+<kbd>1〜4 / Tab</kbd> キャラ変更　<kbd>R</kbd> リセット　<kbd>Esc</kbd> ポーズ　<kbd>M</kbd> BGM　<kbd>F1</kbd> ゲーム内説明<br>
+① PIP：助走ジャンプ・巨大化　② BOLT：長押し→離すとチャージ弾<br>
+③ RUSH：下＋ジャンプで溜め、下を離して発進　④ PUFF：攻撃で吸う／吐く、下で飲み込む、空中で上を押して浮遊<br>
+パッド：A/×でジャンプ、X/□で攻撃、B/○でダッシュ、LB/RBで変更、Startでポーズ。接続後にボタンを一度押してください。<br>
+音が出ない時はゲーム画面をクリックしてキーを押してください。スマホ用タッチボタンは未搭載です。</div>
+</details>
+<footer>BlockShift 0.4.0 · Built with Godot · <a href="LICENSE.txt" target="_blank" rel="noopener">ライセンス</a> · <a href="THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">使用ライブラリ</a></footer>
+<script src="index.js"></script>
+<script>
+'use strict';
+const canvas=document.getElementById('canvas');
+const cover=document.getElementById('cover');
+const status=document.getElementById('status');
+const start=document.getElementById('start');
+const progress=document.getElementById('progress');
+window.blockshiftReady=()=>{
+ document.getElementById('heading').textContent='準備できました';
+ status.textContent='スタートを押して遊ぶ（音が鳴ります）';
+ progress.hidden=true;start.disabled=false;start.textContent='スタート';
+ document.body.dataset.game='ready';
+};
+start.addEventListener('click',()=>{
+ if(typeof window.blockshiftStart!=='function')return;
+ window.blockshiftStart();cover.hidden=true;canvas.focus();
+ document.body.dataset.game='running';
+});
+document.getElementById('fullscreen').addEventListener('click',()=>{
+ canvas.requestFullscreen?.().catch(()=>{});canvas.focus();
+});
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
+const engine=new Engine({"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":51588,"index.wasm":39514754},"focusCanvas":false,"gdextensionLibs":[],"godotPoolSize":4});
+engine.startGame({canvas,canvasResizePolicy:0,focusCanvas:false,
+ onProgress:(current,total)=>{if(total>0){progress.max=total;progress.value=current;status.textContent=`読み込み ${Math.floor(current/total*100)}%`; }},
+ onPrintError:message=>console.error(message)
+}).catch(error=>{
+ document.body.dataset.game='error';
+ document.getElementById('heading').textContent='起動できませんでした';
+ status.textContent='Chrome / Edge / Firefoxの最新版でお試しください。\n'+String(error);
+ start.hidden=true;progress.hidden=true;
+});
+</script>
+</body>
+</html>
+
